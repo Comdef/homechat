@@ -4,7 +4,7 @@ use warnings;
 use Plack::Request;
 use JSON qw(decode_json encode_json);
 use LWP::UserAgent;
-use HTTP::Request::Common qw(POST);
+use HTTP::Request::Common qw(GET POST);
 use DBI;
 use Time::HiRes qw(time);
 

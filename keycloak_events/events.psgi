@@ -4,34 +4,73 @@ use warnings;
 use Plack::Request;
 use JSON qw(decode_json encode_json);
 use LWP::UserAgent;
+use HTTP::Request::Common qw(POST);
 
+# Разрешённые события
 my %ALLOWED_EVENTS = map { $_ => 1 } qw(
-  REGISTER
-  UPDATE_PROFILE
-  UPDATE_EMAIL
-  DELETE_ACCOUNT
+    REGISTER
+    UPDATE_PROFILE
+    UPDATE_EMAIL
+    DELETE_ACCOUNT
 );
 
-my $KEYCLOAK_URL   = 'http://192.168.50.113:8080';
-my $REALM          = 'master';
+# Настройки Keycloak
+my $KEYCLOAK_URL = $ENV{KC_URL} || 'http://192.168.50.113:8080';
+my $REALM        = $ENV{KC_REALM} || 'master';
+my $CLIENT_ID    = $ENV{KC_CLIENT_ID} || 'sync-service';
+my $CLIENT_SECRET= $ENV{KC_CLIENT_SECRET} || '9HXt8xUlWyE5U3ijiAbkUG4PFuVfVByJ';
+
+# LWP
 my $ua = LWP::UserAgent->new(timeout => 5);
 
-my $ADMIN_TOKEN    = get_admin_token('sync-service', '9HXt8xUlWyE5U3ijiAbkUG4PFuVfVByJ');
+# Кеш токена
+my $ADMIN_TOKEN;
+my $TOKEN_EXPIRES_AT = 0;
 
-sub fetch_user {
-    my ($user_id) = @_;
+sub get_admin_token {
+    # Если токен не просрочен
+    return $ADMIN_TOKEN if $ADMIN_TOKEN && time < $TOKEN_EXPIRES_AT;
 
-    my $req = HTTP::Request->new(
-        GET => "$KEYCLOAK_URL/admin/realms/$REALM/users/$user_id"
+    my $res = $ua->request(
+        POST "$KEYCLOAK_URL/realms/$REALM/protocol/openid-connect/token",
+        Content_Type => 'application/x-www-form-urlencoded',
+        Content => {
+            grant_type    => 'client_credentials',
+            client_id     => $CLIENT_ID,
+            client_secret => $CLIENT_SECRET,
+        }
     );
-    $req->header( Authorization => "Bearer $ADMIN_TOKEN" );
+
+    # Логи для отладки
+    print STDERR $res->status_line, "\n";
+    print STDERR $res->decoded_content, "\n";
+
+    die "Token error" unless $res->is_success;
+
+    my $data = decode_json($res->decoded_content);
+    $ADMIN_TOKEN = $data->{access_token};
+    $TOKEN_EXPIRES_AT = time + $data->{expires_in} - 30; # 30 сек запас
+    return $ADMIN_TOKEN;
+}
+
+# Получение пользователя по username
+sub fetch_user {
+    my ($username) = @_;
+    my $req = HTTP::Request->new(
+        GET => "$KEYCLOAK_URL/admin/realms/$REALM/users?username=$username"
+    );
+    $req->header( Authorization => "Bearer " . get_admin_token() );
 
     my $res = $ua->request($req);
     return undef unless $res->is_success;
 
-    return decode_json($res->decoded_content);
+    my $users = decode_json($res->decoded_content);
+    return undef unless @$users;  # если пустой массив
+
+    return $users->[0];  # первый найденный
 }
 
+# Формирование JSON-ответа
 sub json_response {
     my ($status, $data) = @_;
     return [
@@ -41,49 +80,33 @@ sub json_response {
     ];
 }
 
-sub get_admin_token {
-    my $client_id = shift;
-    my $client_secret = shift;
-    my $res = $ua->post(
-        "$KEYCLOAK_URL/realms/$REALM/protocol/openid-connect/token",
-        {
-            grant_type    => 'client_credentials',
-            client_id     => $client_id,
-            client_secret => $client_secret,
-        }
-    );
-
-    die "Token error" unless $res->is_success;
-
-    my $data = decode_json($res->decoded_content);
-    return $data->{access_token};
-}
-
+# Основное приложение PSGI
 my $app = sub {
     my $req = Plack::Request->new(shift);
 
+    # Разрешены только POST
     return json_response(405, { error => 'Method not allowed' })
         unless $req->method eq 'POST';
 
     my $payload;
-    eval {
-        $payload = decode_json($req->content);
-    };
+    eval { $payload = decode_json($req->content); };
     return json_response(400, { error => 'Invalid JSON' }) if $@;
 
     my $event = $payload->{type} // '';
     return json_response(200, { status => 'ignored' })
         unless $ALLOWED_EVENTS{$event};
 
-    my $user_id = $payload->{userId};
+    my $username = $payload->{userId} // '';
+    return json_response(400, { error => 'Missing userId' }) unless $username;
 
     if ($event eq 'DELETE_ACCOUNT') {
-        # TODO: delete from users where id = user_id
-        warn "DELETE user $user_id\n";
+        # TODO: удалить пользователя из вашей БД
+        warn "DELETE user $username\n";
         return json_response(200, { status => 'deleted' });
     }
 
-    my $user = fetch_user($user_id);
+    # Получаем пользователя из Keycloak
+    my $user = fetch_user($username);
     return json_response(500, { error => 'Failed to fetch user' })
         unless $user;
 
@@ -96,10 +119,10 @@ my $app = sub {
         enabled    => $user->{enabled},
     );
 
-    # TODO: UPSERT into users table
+    # TODO: UPSERT в вашу таблицу users
     warn "UPSERT user $user_row{username}\n";
 
-    return json_response(200, { status => 'ok' });
+    return json_response(200, { status => 'ok', user => \%user_row });
 };
 
 $app;

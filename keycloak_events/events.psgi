@@ -43,7 +43,7 @@ sub json_response {
 
 sub get_admin_token {
     my $client_id = shift;
-    my $client_secret = shift
+    my $client_secret = shift;
     my $res = $ua->post(
         "$KEYCLOAK_URL/realms/$REALM/protocol/openid-connect/token",
         {

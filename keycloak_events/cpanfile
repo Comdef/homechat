@@ -1,4 +1,5 @@
 requires 'Plack';
 requires 'JSON';
 requires 'Plack::Request';
+requires 'LWP::UserAgent'
 

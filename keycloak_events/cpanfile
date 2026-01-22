@@ -2,4 +2,5 @@ requires 'Plack';
 requires 'JSON';
 requires 'Plack::Request';
 requires 'LWP::UserAgent'
+requires 'Plack::Handler::Starman'
 

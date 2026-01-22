@@ -3,4 +3,5 @@ requires 'JSON';
 requires 'Plack::Request';
 requires 'LWP::UserAgent';
 requires 'Plack::Handler::Starman';
-
+requires 'DBI';
+requires 'Time::HiRes';

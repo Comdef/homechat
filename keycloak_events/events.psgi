@@ -14,9 +14,9 @@ my %ALLOWED_EVENTS = map { $_ => 1 } qw(
 
 my $KEYCLOAK_URL   = 'http://192.168.50.113:8080';
 my $REALM          = 'main';
-my $ADMIN_TOKEN    = get_admin_token('sync-service', '9HXt8xUlWyE5U3ijiAbkUG4PFuVfVByJ');
-
 my $ua = LWP::UserAgent->new(timeout => 5);
+
+my $ADMIN_TOKEN    = get_admin_token('sync-service', '9HXt8xUlWyE5U3ijiAbkUG4PFuVfVByJ');
 
 sub fetch_user {
     my ($user_id) = @_;

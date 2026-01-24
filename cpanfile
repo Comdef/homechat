@@ -1,0 +1,10 @@
+requires 'Plack';
+requires 'JSON';
+requires 'Plack::Request';
+requires 'LWP::UserAgent';
+requires 'Plack::Handler::Starman';
+requires 'DBI';
+requires 'Time::HiRes';
+requires 'DBD::Pg';
+requires 'Try::Tiny';
+

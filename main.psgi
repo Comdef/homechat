@@ -7,6 +7,7 @@ use JSON qw(encode_json decode_json);
 use LWP::UserAgent;
 use DBI;
 use Try::Tiny;
+use Plack::Builder;
 
 # ---------------- CONFIG ----------------
 
@@ -165,5 +166,12 @@ my $app = sub {
     return json_response(404, { error => 'Not found' });
 };
 
-$app;
+
+builder {
+    enable "Plack::Middleware::Static",
+        path => qr{^/(swagger|favicon\.ico)},
+        root => './public';
+
+    $app;
+};
 

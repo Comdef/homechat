@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      KC_URL: http://192.168.50.113:8080
+      KC_REALM: master
+      KC_CLIENT_ID: sync-service
+      KC_CLIENT_SECRET: ${KC_CLIENT_SECRET}
+
+      DB_IP: db
+      DB_USER: homechat
+      DB_PASS: ${DB_PASS}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: homechat
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+

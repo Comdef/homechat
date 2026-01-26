@@ -1,10 +1,11 @@
 requires 'Plack';
-requires 'JSON';
+requires 'Starman';
 requires 'Plack::Request';
+requires 'Plack::Response';
+requires 'Plack::Middleware::Static';
+requires 'JSON';
 requires 'LWP::UserAgent';
-requires 'Plack::Handler::Starman';
 requires 'DBI';
-requires 'Time::HiRes';
 requires 'DBD::Pg';
 requires 'Try::Tiny';
 

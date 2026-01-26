@@ -1,0 +1,8 @@
+Основной монолит: main.psgi
+keycloak_events/events.psgi - сервис который принимает эвенты от keycloak, то есть измения:
+    REGISTER
+    UPDATE_PROFILE
+    UPDATE_EMAIL
+    DELETE_ACCOUNT
+Так же будут транслировать в основную базу 
+

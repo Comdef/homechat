@@ -4,29 +4,15 @@ services:
   api:
     build: .
     ports:
-      - "5000:5000"
+      - "8080:5000"
     environment:
+      DB_IP: 192.168.50.112
+      DB_USER: homechat
+      DB_PASS: Markes
+
       KC_URL: http://192.168.50.113:8080
       KC_REALM: master
       KC_CLIENT_ID: sync-service
-      KC_CLIENT_SECRET: ${KC_CLIENT_SECRET}
-
-      DB_IP: db
-      DB_USER: homechat
-      DB_PASS: ${DB_PASS}
-    depends_on:
-      - db
+      KC_CLIENT_SECRET: 9HXt8xUlWyE5U3ijiAbkUG4PFuVfVByJ
     restart: unless-stopped
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: mydb
-      POSTGRES_USER: homechat
-      POSTGRES_PASSWORD: ${DB_PASS}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
 

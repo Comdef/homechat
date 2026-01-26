@@ -8,6 +8,7 @@ use LWP::UserAgent;
 use DBI;
 use Try::Tiny;
 use Plack::Builder;
+use Plack::App::File;
 
 # ---------------- CONFIG ----------------
 
@@ -17,7 +18,7 @@ my $CLIENT_ID      = $ENV{KC_CLIENT_ID} || 'sync-service';
 my $CLIENT_SECRET  = $ENV{KC_CLIENT_SECRET} || '9HXt8xUlWyE5U3ijiAbkUG4PFuVfVByJ';
 
 my $DB_IP = $ENV{DB_IP} || '192.168.50.112';
-my $DB_DSN  = 'dbi:Pg:dbname=mydb;host=' . $DB_IP;
+my $DB_DSN  = 'dbi:Pg:dbname=homechat;host=' . $DB_IP;
 my $DB_USER = $ENV{DB_USER} || 'homechat';
 my $DB_PASS = $ENV{DB_PASS} || 'Markes';
 
@@ -166,12 +167,10 @@ my $app = sub {
     return json_response(404, { error => 'Not found' });
 };
 
-
 builder {
     enable "Plack::Middleware::Static",
         path => qr{^/(swagger|favicon\.ico)},
-        root => './public';
+        root => './';
 
     $app;
 };
-

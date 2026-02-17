@@ -178,6 +178,8 @@ my $app = sub {
 	my $p = $req->parameters;
 	my ($last_name, $first_name) =  @$p{qw/last_name first_name/};
 	my $search_response = [];
+use Data::Dumper;
+warn Dumper $p;
 
 	if ($last_name){
 		$search_response = $dbh->selectall_arrayref(

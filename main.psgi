@@ -97,8 +97,14 @@ my $app = sub {
         my $p = $req->parameters;
         my ($email, $login, $password) = @$p{qw/email login password/};
 
-        my $user_id;
-
+        my $user_id = $dbh->selectrow_array("SELECT id FROM users WHERE email = ?", undef, $email);
+	
+#TODO: It's not safe, you can brute force a user list.
+	return json_response(201, {
+             id     => $user_id,
+             status => 'registered'
+         }) if ($user_id);
+	
         try {
             my $sth = $dbh->prepare(
                 'INSERT INTO users (email, login) VALUES (?, ?) RETURNING id'
@@ -145,6 +151,7 @@ my $app = sub {
         });
     }
 
+
     # -------- /user/get/{id} --------
     if ($req->path =~ m{^/user/get/(\d+)$} && $req->method eq 'GET') {
 
@@ -163,6 +170,24 @@ my $app = sub {
 
         return json_response(200, $user || {});
     }
+
+    # -------- /user/search --------
+    if ($req->path =~ m{^/user/search)$} && $req->method eq 'GET') {
+	my ($last_name, $first_name) =  @$p{qw/last_name first_name/};
+	my $search_response = [];
+
+	if ($last_name){
+		$search_response = $dbh->selectall_arrayref(
+             		"select id, email, username from users where last_name like '%?%'",
+             		{Slice=>{}},
+             		$last_name
+         	);
+	}elsif ($first_name){
+		
+	}
+        return json_response(200, $search_response || {});
+    }
+
 
     return json_response(404, { error => 'Not found' });
 };

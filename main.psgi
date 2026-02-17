@@ -9,6 +9,8 @@ use DBI;
 use Try::Tiny;
 use Plack::Builder;
 use Plack::App::File;
+use utf8;
+binmode STDOUT, ':encoding(UTF-8)';
 
 # ---------------- CONFIG ----------------
 
@@ -37,7 +39,7 @@ sub json_response {
     my ($status, $data) = @_;
     return [
         $status,
-        ['Content-Type' => 'application/json'],
+        ['Content-Type' => 'application/json;charset=utf-8'],
         [ encode_json($data) ]
     ];
 }

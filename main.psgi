@@ -195,17 +195,18 @@ my $app = sub {
 	my ($last_name, $first_name) =  @$p{qw/last_name first_name/};
 	my $search_response = [];
 
-	if ($last_name){
-		my $pattern = "%$last_name%";
+	if ($last_name || $first_name){
+		my $pattern_last_name = "%$last_name%";
+		my $pattern_first_name = "%$first_name%";
 		$search_response = $dbh->selectall_arrayref(
              		q{
-				select id, email, username from users where last_name LIKE ?
+				select id, email, username from users where last_name LIKE ? AND first_name LIKE ?
 			},
              		{Slice=>{}},
-             		$pattern
+             		$pattern_last_name, $pattern_first_name
          	);
-	}elsif ($first_name){
-		
+	}else{
+		return json_response(200, {Error=>'Need params'});	
 	}
 	push @$search_response, $last_name; 
         return json_response(200, $search_response || {});

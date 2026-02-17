@@ -173,6 +173,7 @@ my $app = sub {
 
     # -------- /user/search --------
     if ($req->path =~ m{^/user/search$} && $req->method eq 'GET') {
+	my $p = $req->parameters;
 	my ($last_name, $first_name) =  @$p{qw/last_name first_name/};
 	my $search_response = [];
 

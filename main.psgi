@@ -180,7 +180,7 @@ my $app = sub {
 	if ($last_name){
 		$search_response = $dbh->selectall_arrayref(
              		q{
-				select id, email, username from users where last_name like '%?%'
+				select id, email, username from users where last_name=?'
 			},
              		{Slice=>{}},
              		$last_name

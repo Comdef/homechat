@@ -30,7 +30,7 @@ my $dbh = DBI->connect(
     $DB_DSN,
     $DB_USER,
     $DB_PASS,
-    { RaiseError => 1, AutoCommit => 1 }
+    { RaiseError => 1, AutoCommit => 1, pg_enable_utf8 => 1 }
 );
 
 sub json_response {

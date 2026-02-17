@@ -181,6 +181,12 @@ my $app = sub {
 use Data::Dumper;
 warn Dumper $p;
 
+use Encode qw(decode);
+
+$last_name = decode('UTF-8', $last_name)
+    unless Encode::is_utf8($last_name);
+
+
 	if ($last_name){
 		$search_response = $dbh->selectall_arrayref(
              		q{

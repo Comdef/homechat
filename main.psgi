@@ -44,6 +44,22 @@ sub json_response {
     ];
 }
 
+use Encode qw(decode is_utf8);
+sub normalize_params {
+    my ($params) = @_;
+
+    for my $key (keys %$params) {
+        my $value = $params->{$key};
+
+        if (defined $value && !is_utf8($value)) {
+            $params->{$key} = decode('UTF-8', $value);
+        }
+    }
+
+    return $params;
+}
+
+
 # ---------------- AUTH -------------------
 
 sub check_token {
@@ -175,22 +191,14 @@ my $app = sub {
 
     # -------- /user/search --------
     if ($req->path =~ m{^/user/search$} && $req->method eq 'GET') {
-	my $p = $req->parameters;
+	my $p = normalize_params({ $req->parameters->flatten });
 	my ($last_name, $first_name) =  @$p{qw/last_name first_name/};
 	my $search_response = [];
-use Data::Dumper;
-warn Dumper $p;
-
-use Encode qw(decode);
-
-$last_name = decode('UTF-8', $last_name)
-    unless Encode::is_utf8($last_name);
-
 
 	if ($last_name){
 		$search_response = $dbh->selectall_arrayref(
              		q{
-				select id, email, username from users where last_name=?
+				select id, email, username from users where last_name='%?%'
 			},
              		{Slice=>{}},
              		$last_name
